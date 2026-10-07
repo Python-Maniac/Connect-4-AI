@@ -1,0 +1,165 @@
+import math
+import random
+
+gameover=False
+
+#AI
+
+inputlayerlist=[]
+
+inputlayer=[]
+outputlayer=[0, 0, 0, 0, 0, 0, 0]
+hiddenlayers=[]
+hiddenlayerslist=[]
+
+numofnn=10
+num=100
+
+def createinput(n):
+    global num, numofnn, inputlayer
+    for k in range(numofnn):
+        for i in range(n):
+            mylist=[i]
+            inputlayer.append(mylist)
+        for j in range(n):
+            for i in range(len(hiddenlayerslist[k])+1):
+                inputlayer[j].append(random.randint(-num, num)/num)
+        inputlayerlist.append(inputlayer)
+        inputlayer=[]
+    #(inputlayerlist[0], "INPUT")
+    #(inputlayerlist[1], "INPUT")
+
+def createhidden(n):
+    global num, numofnn, hiddenlayers
+    for k in range(numofnn):
+        #(k)
+        for i in range(n):
+            mylist=[0]
+            hiddenlayers.append(mylist)
+        for j in range(n):
+            for i in range(len(outputlayer)+1):
+                hiddenlayers[j].append(random.randint(-num, num)/num)
+        hiddenlayerslist.append(hiddenlayers)
+        hiddenlayers=[]
+    #(hiddenlayerslist[0], "HIDDEN")
+    #(hiddenlayerslist[1], "HIDDEN")
+
+
+createhidden(20)
+createinput(42)
+print(inputlayer, "\n------------------------------------------------------------------------")
+print(hiddenlayers, "\n------------------------------------------------------------------------")
+print(outputlayer, "\n------------------------------------------------------------------------")
+#(len(inputlayer))
+
+def calculateinput(n):
+    for i in range(len(inputlayerlist[n])):
+        for j in range(len(inputlayerlist[n][i])-2):
+            hiddenlayerslist[n][j][0]=hiddenlayerslist[n][j][0]+inputlayerlist[n][i][0]*inputlayerlist[n][i][j+1]+inputlayerlist[n][i][len(inputlayerlist[n][i])-1]
+            #if j==0: print("CURRENT NUMBER:", hiddenlayers[j][0], "INPUTLAYER NUMBER:", inputlayer[i][0], "INPUTLAYER WEIGHT:", inputlayer[i][j+1], "INPUTLAYER BIAS:", inputlayer[i][len(inputlayer[i])-1])
+
+def calculateoutput(n):
+    for i in range(len(hiddenlayerslist[n])):
+        for j in range(len(hiddenlayerslist[n][i])-2):
+            outputlayer[j]=outputlayer[j]+hiddenlayerslist[n][i][0]*hiddenlayerslist[n][i][j+1]+hiddenlayerslist[n][i][len(hiddenlayerslist[n][i])-1]
+            #if j==0: print("CURRENT NUMBER:", outputlayer[j], "HIDDENLAYERS NUMBER:", hiddenlayers[i][0], "HIDDENLAYERS WEIGHT:", hiddenlayers[i][j+1], "HIDDENLAYERS BIAS:", hiddenlayers[i][len(hiddenlayers[i])-1])
+
+def takeinput(n):
+    #(n)
+    #(inputlayerlist[n])
+    for i in range(6):
+        for j in range(7):
+            inputlayerlist[n][i*7+j][0]=board[i][j]
+
+def checkfull(x):
+    if board[5][x]==0:
+        return False
+    return True
+
+def calculate(sym, n):
+    global gameover
+    takeinput(n)
+    calculateinput(n)
+    calculateoutput(n)
+    highi=0
+    highest=-1000000
+    change=1
+    mylist=[]
+    for i in range(len(outputlayer)):
+        mylist.append(outputlayer[i])
+        if outputlayer[i]>highest and checkfull(i)==False:
+            highi=i
+            change=0
+            highest=outputlayer[i]
+        outputlayer[i]=0
+    if change==1:
+        #(mylist)
+        printboard()
+        gameover=True
+    place(highi, sym)
+
+#CONNECT 4
+
+def checkwin(xdiff, ydiff, sym):
+    for i in range(6):
+        for j in range(7):
+            totalpicked=0
+            for k in range(4):
+                try:
+                    if board[i+xdiff*k][j+ydiff*k]==sym:
+                        totalpicked+=1
+                    else:
+                        totalpicked=0
+                except:
+                    totalpicked=0
+                if totalpicked==4:
+                    #(j,i, j+k*ydiff, i+k*xdiff)
+                    return True
+                # if totalpicked==3:
+                #     print(sym, "NEARLY WON")
+    return False
+
+board=[]
+for i in range(6):
+    board.append([0, 0, 0, 0, 0, 0, 0])
+
+def printboard():
+    for i in range(6):
+        mystr=""
+        for j in range(7):
+            mystr+=str(board[5-i][j])+", "
+        print(mystr[0:len(mystr)-2])
+
+def place(x, sym):
+    global gameover
+    for i in range(6):
+        if board[5-i][x]==0 and board[4-i][x]!=0:
+            break
+    board[5-i][x]=sym
+    if checkwin(0, 1, sym) or checkwin(1, 0, sym) or checkwin(1, 1, sym) or checkwin(-1, 1, sym):
+        printboard()
+        print("END", sym)
+        gameover=True
+    end=1
+    for i in range(6):
+        for j in range(7):
+            if board[i][j]==0:
+                end=0
+    if end==1:
+        printboard()
+        gameover=True
+n=0
+
+while gameover==False:
+    calculate(1, n)
+    if gameover==False:
+        calculate(2, n+1)
+    if gameover==True:
+        board=[]
+        for i in range(6):
+            board.append([0, 0, 0, 0, 0, 0, 0])
+        gameover=False
+        n+=2  
+        if n==numofnn:
+            exit()
+    #(n)
